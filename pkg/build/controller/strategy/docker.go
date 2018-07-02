@@ -2,6 +2,7 @@ package strategy
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,6 +58,24 @@ func (bs *DockerBuildStrategy) CreateBuildPod(build *buildapi.Build) (*v1.Pod, e
 		serviceAccount = buildutil.BuilderServiceAccountName
 	}
 
+	buildContextDir := buildutil.InputContentPath
+	if build.Spec.Source.ContextDir != "" {
+		buildContextDir = filepath.Join(buildContextDir, build.Spec.Source.ContextDir)
+	}
+	var buildTagArgs []string
+	if build.Spec.Output.To != nil {
+		switch build.Spec.Output.To.Kind {
+		case "DockerImage":
+			buildTagArgs = []string{"-t", "docker://" + build.Spec.Output.To.Name}
+		default:
+			return nil, fmt.Errorf("unhandled output kind %q", build.Spec.Output.To.Kind)
+		}
+	}
+	var buildLabelArgs []string
+	for _, imageLabel := range build.Spec.Output.ImageLabels {
+		buildLabelArgs = append(buildLabelArgs, "--label", fmt.Sprintf("%s=%s", imageLabel.Name, imageLabel.Value))
+	}
+	buildCommand := append(append(append([]string{"buildah", "build-using-dockerfile", "--tls-verify=false"}, buildTagArgs...), buildLabelArgs...), buildContextDir)
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      buildapi.GetBuildPodName(build),
@@ -68,8 +87,8 @@ func (bs *DockerBuildStrategy) CreateBuildPod(build *buildapi.Build) (*v1.Pod, e
 			Containers: []v1.Container{
 				{
 					Name:    DockerBuild,
-					Image:   bs.Image,
-					Command: []string{"openshift-docker-build"},
+					Image:   "quay.io/nalind/buildah-chroot-wip:chroot-wip",
+					Command: buildCommand,
 					Env:     copyEnvVarSlice(containerEnv),
 					// TODO: run unprivileged https://github.com/openshift/origin/issues/662
 					SecurityContext: &v1.SecurityContext{
@@ -171,8 +190,6 @@ func (bs *DockerBuildStrategy) CreateBuildPod(build *buildapi.Build) (*v1.Pod, e
 	}
 
 	setOwnerReference(pod, build)
-	setupDockerSocket(pod)
-	setupCrioSocket(pod)
 	setupDockerSecrets(pod, &pod.Spec.Containers[0], build.Spec.Output.PushSecret, strategy.PullSecret, build.Spec.Source.Images)
 	// For any secrets the user wants to reference from their Assemble script or Dockerfile, mount those
 	// secrets into the main container.  The main container includes logic to copy them from the mounted
