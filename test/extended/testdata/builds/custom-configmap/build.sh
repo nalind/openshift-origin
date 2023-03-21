@@ -2,16 +2,17 @@
 
 set -euo pipefail
 
-# Note that in this case we're looking for a config map as the main build
-# source. The build controller mounts config maps by name under
-# /var/run/configs/openshift.io/build, and the builder image decides how to use
-# the corresponding DestinationDir values from the Build object encoded in
-# $BUILD, if it consults them at all.
-#
+# Note that in this case we're looking for a config map.  Those get mounted by
+# name under /var/run/configs/openshift.io/build, with the associated
+# DestinationDir values from the Build object encoded in $BUILD.
 # A Docker or Source builder would clone the git repository named in the
 # $SOURCE_REPOSITORY env variable, copy the config map contents into a
-# subdirectory of the cloned source tree (or a context subdirectory of it)
-# named after the config map, and proceed from there.
+# subdirectory of the cloned source tree (or a subdirectory of it), and use the
+# result as the source for the build.  We could dig the location set in the
+# Build object out of $BUILD and copy the contents there, but for this test
+# that doesn't tell us anything we didn't already know or check, so just look
+# at the location where the build controller mounted the config map and call it
+# done.
 cd /var/run/configs/openshift.io/build/custom-configmap
 
 # OUTPUT_REGISTRY and OUTPUT_IMAGE are env variables provided by the custom
