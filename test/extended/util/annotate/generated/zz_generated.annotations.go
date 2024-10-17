@@ -23,6 +23,8 @@ var Annotations = map[string]string{
 
 	"[sig-api-machinery] API data in etcd should be stored at the correct location and version for all resources [Serial]": " [Suite:openshift/conformance/serial]",
 
+	"[sig-api-machinery] API health endpoints should contain the required checks for the oauth-apiserver APIs": " [Suite:openshift/conformance/parallel]",
+
 	"[sig-api-machinery] API health endpoints should contain the required checks for the openshift-apiserver APIs": " [Suite:openshift/conformance/parallel]",
 
 	"[sig-api-machinery] APIServer CR fields validation additionalCORSAllowedOrigins [apigroup:config.openshift.io]": " [Suite:openshift/conformance/parallel]",
@@ -1142,8 +1144,6 @@ var Annotations = map[string]string{
 	"[sig-etcd][Feature:EtcdVerticalScaling][Suite:openshift/etcd/scaling] etcd is able to vertically scale up and down when CPMS is disabled [apigroup:machine.openshift.io]": "",
 
 	"[sig-etcd][Feature:EtcdVerticalScaling][Suite:openshift/etcd/scaling] etcd is able to vertically scale up and down with a single node [Timeout:60m][apigroup:machine.openshift.io]": "",
-
-	"[sig-etcd][OCPFeatureGate:AutomatedEtcdBackup][Suite:openshift/etcd/recovery] etcd is able to apply automated backup no-config configuration [Timeout:70m][apigroup:config.openshift.io]": "",
 
 	"[sig-etcd][OCPFeatureGate:HardwareSpeed][Serial] etcd is able to set the hardware speed to Slower [Timeout:30m][apigroup:machine.openshift.io]": " [Suite:openshift/conformance/serial]",
 
